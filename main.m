@@ -25,7 +25,7 @@ epsilonX = 3.5; epsilonL = 3.5;
 psiX = 0.02; psiL = 0.015;
 kpx = 240; kdx = 100; kpl = 45; kdl = 10;
 lambdaX = 0.1; lambdaL = 0.1; 
-phiX_bar = 0; phiL_bar = 0;
+phiX_bar = 2; phiL_bar = 5;
 %phiX_bar = 2; phiL_bar = 5; %TODO
 
 Frx_0 = 4.4; 
@@ -40,6 +40,7 @@ xd_prev = 0;
 ld_prev = l(1);
 dxd_prev = 0;
 dld_prev = 0;
+
 for k=1:numSteps
     xd(k) = pdx/2 + kvx^2*log(cosh(2*kax*t(k)/kvx-epsilonX)/cosh(2*kax*t(k)/kvx-epsilonX-2*kax*pdx/kvx^2))/(4*kax);
     ld(k) = (pdl_dash+2*l(1))/2 + kvl^2*log(cosh(2*kal*t(k)/kvl-epsilonL)/cosh(2*kal*t(k)/kvl-epsilonL-2*kal*pdl_dash/kvl^2))/(4*kal);
@@ -60,11 +61,14 @@ for k=1:numSteps
 %     ddel(k) = ddl(k)-ddld(k);
 %     ddeth(k) = ddth(k);
 
-    phiX = 0; %TODO
-    phiL = 0;
+    phiX = 5.5 * dx(k); %TODO
+    phiL = 21.0 * dl(k);
+    phiX_store(k) = phiX;
+    phiL_store(k) = phiL;
+    
     q(:,k) = [x(k);l(k);th(k)];
     dq(:,k) = [dx(k);dl(k);dth(k)];
-    Frx = Frx_0*tanh(dx(k)/epsilon)-krx*sign(dx(k))*dx(k);
+    Frx = (Frx_0 * tanh(dx(k)/epsilon)) - (krx * abs(dx(k)) * dx(k));
     [Mc,C,G] = computeMCG(q(:,k),dq(:,k));
     ux(k) = -kpx*ex(k) - 2*lambdaX*psiX^2*ex(k)/(psiX^2-ex(k)^2)^2 - kdx*dex(k) + (M+m)*ddxd(k) + m*ddld(k)*sin(th(k)) + m*dld(k)*dth(k)*cos(th(k)) + Frx - phiX_bar*sign(dex(k));
     ul(k) = -kpl*el(k) - 2*lambdaL*psiL^2*el(k)/(psiL^2-el(k)^2)^2 - kdl*del(k) + m*ddxd(k)*sin(th(k)) + m*ddld(k) - m*g + dL*dl(k) - phiL_bar*sign(del(k));
@@ -92,6 +96,10 @@ for k=1:numSteps
     
 end
 
+
+
+%% Functions
+
 function [Mc,C,G] = computeMCG(q,dq)
     global M m g 
     Mc = [M+m           m*sin(q(3))  m*q(2)*cos(q(3));
@@ -104,3 +112,5 @@ function [Mc,C,G] = computeMCG(q,dq)
      
     G = [0 -m*g*cos(q(3)) m*g*q(2)*sin(q(3))]';
 end
+
+

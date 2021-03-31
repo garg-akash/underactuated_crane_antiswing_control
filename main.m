@@ -96,7 +96,83 @@ for k=1:numSteps
     
 end
 
+%% Plots
 
+
+desktop = com.mathworks.mde.desk.MLDesktop.getInstance;
+myGroup = desktop.addGroup('Plots');
+desktop.setGroupDocked('Plots', 0);
+myDim   = java.awt.Dimension(3, 2);   % 3 columns, 2 rows
+desktop.setDocumentArrangement('Plots', 2, myDim)
+figH    = gobjects(1, 5);
+bakWarn = warning('off','MATLAB:HandleGraphics:ObsoletedProperty:JavaFrame');
+% Error Plots
+
+clc
+figH(1) = figure('WindowStyle', 'docked', 'Name', sprintf('X Error Plot'), 'NumberTitle', 'off');
+drawnow;
+pause(0.02);
+set(get(handle(figH(1)), 'javaframe'), 'GroupName', 'Plots');
+grid minor;
+y = ex';
+x = t;
+grid minor;
+line(x, y, 'Color', 'blue', 'LineWidth', 1);
+ylabel('Error in x [meters]');
+xlabel('Time [sec]');
+hold on
+
+figH(2) = figure('WindowStyle', 'docked', 'Name', sprintf('L Error Plot'), 'NumberTitle', 'off');
+drawnow;
+pause(0.02);
+set(get(handle(figH(2)), 'javaframe'), 'GroupName', 'Plots');
+grid minor;
+y = el';
+x = t;
+grid minor;
+line(x, y, 'Color', 'red', 'LineWidth', 1);
+ylabel('Error in l [meters]');
+xlabel('Time [sec]');
+hold on
+
+figH(3) = figure('WindowStyle', 'docked', 'Name', sprintf('Theta Error Plot'), 'NumberTitle', 'off');
+drawnow;
+pause(0.02);
+set(get(handle(figH(3)), 'javaframe'), 'GroupName', 'Plots');
+grid minor;
+y = eth';
+x = t;
+grid minor;
+line(x, y, 'Color', 'green', 'LineWidth', 1);
+ylabel('Error in theta [meters]');
+xlabel('Time [sec]');
+hold on
+
+figH(4) = figure('WindowStyle', 'docked', 'Name', sprintf('Ux Plot'), 'NumberTitle', 'off');
+drawnow;
+pause(0.02);
+set(get(handle(figH(4)), 'javaframe'), 'GroupName', 'Plots');
+grid minor;
+y = ux';
+x = t;
+grid minor;
+line(x, y, 'Color', 'blue', 'LineWidth', 1);
+ylabel('Ux(t) [N]');
+xlabel('Time [sec]');
+hold on
+
+figH(5) = figure('WindowStyle', 'docked', 'Name', sprintf('Ul Plot'), 'NumberTitle', 'off');
+drawnow;
+pause(0.02);
+set(get(handle(figH(5)), 'javaframe'), 'GroupName', 'Plots');
+grid minor;
+y = ul';
+x = t;
+grid minor;
+line(x, y, 'Color', 'blue', 'LineWidth', 1);
+ylabel('Ul(t) [N]');
+xlabel('Time [sec]');
+hold on
 
 %% Functions
 

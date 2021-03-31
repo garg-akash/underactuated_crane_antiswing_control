@@ -25,7 +25,7 @@ epsilonX = 3.5; epsilonL = 3.5;
 psiX = 0.02; psiL = 0.015;
 kpx = 240; kdx = 100; kpl = 45; kdl = 10;
 lambdaX = 0.1; lambdaL = 0.1; 
-phiX_bar = 2; phiL_bar = 5;
+phiX_bar = 8; phiL_bar = 5;
 %phiX_bar = 2; phiL_bar = 5; %TODO
 
 Frx_0 = 4.4; 
@@ -34,7 +34,7 @@ epsilon = 0.01;
 dL = 6.5;
 l(1) = 0.5;
 pdl = l(1) + pdl_dash;
-dTH = 0; %TODO
+dTH = 4.5; %TODO
 
 xd_prev = 0;
 ld_prev = l(1);
@@ -61,7 +61,7 @@ for k=1:numSteps
 %     ddel(k) = ddl(k)-ddld(k);
 %     ddeth(k) = ddth(k);
 
-    phiX = 5.5 * dx(k); %TODO
+    phiX = 0.6 * dx(k); %TODO
     phiL = 21.0 * dl(k);
     phiX_store(k) = phiX;
     phiL_store(k) = phiL;

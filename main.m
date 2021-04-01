@@ -118,8 +118,13 @@ y = ex';
 x = t;
 grid minor;
 line(x, y, 'Color', 'blue', 'LineWidth', 1);
+hold on
+plot(t,psiX*ones(size(t)),'--','Color','g')
+hold on
+plot(t,-psiX*ones(size(t)),'--','Color','g')
 ylabel('Error in x [meters]');
 xlabel('Time [sec]');
+ylim([-0.1 0.1])
 hold on
 
 figH(2) = figure('WindowStyle', 'docked', 'Name', sprintf('L Error Plot'), 'NumberTitle', 'off');
@@ -131,8 +136,13 @@ y = el';
 x = t;
 grid minor;
 line(x, y, 'Color', 'red', 'LineWidth', 1);
+hold on
+plot(t,psiL*ones(size(t)),'--','Color','g')
+hold on
+plot(t,-psiL*ones(size(t)),'--','Color','g')
 ylabel('Error in l [meters]');
 xlabel('Time [sec]');
+ylim([-0.04 0.04])
 hold on
 
 figH(3) = figure('WindowStyle', 'docked', 'Name', sprintf('Theta Error Plot'), 'NumberTitle', 'off');
@@ -146,6 +156,7 @@ grid minor;
 line(x, y, 'Color', 'green', 'LineWidth', 1);
 ylabel('Error in theta [meters]');
 xlabel('Time [sec]');
+ylim([-5 5])
 hold on
 
 figH(4) = figure('WindowStyle', 'docked', 'Name', sprintf('Ux Plot'), 'NumberTitle', 'off');
@@ -159,6 +170,7 @@ grid minor;
 line(x, y, 'Color', 'blue', 'LineWidth', 1);
 ylabel('Ux(t) [N]');
 xlabel('Time [sec]');
+ylim([-5 20])
 hold on
 
 figH(5) = figure('WindowStyle', 'docked', 'Name', sprintf('Ul Plot'), 'NumberTitle', 'off');
@@ -172,6 +184,7 @@ grid minor;
 line(x, y, 'Color', 'blue', 'LineWidth', 1);
 ylabel('Ul(t) [N]');
 xlabel('Time [sec]');
+ylim([-12 -4])
 hold on
 
 %% Functions

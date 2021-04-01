@@ -25,8 +25,8 @@ epsilonX = 3.5; epsilonL = 3.5;
 psiX = 0.02; psiL = 0.015;
 kpx = 240; kdx = 100; kpl = 45; kdl = 10;
 lambdaX = 0.1; lambdaL = 0.1; 
-phiX_bar = 8; phiL_bar = 5;
-%phiX_bar = 2; phiL_bar = 5; %TODO
+%phiX_bar = 8; phiL_bar = 5;
+phiX_bar = 0.01; phiL_bar = 0.1; %TODO
 
 Frx_0 = 4.4; 
 krx = -0.5; 
@@ -61,8 +61,10 @@ for k=1:numSteps
 %     ddel(k) = ddl(k)-ddld(k);
 %     ddeth(k) = ddth(k);
 
-    phiX = 0.6 * dx(k); %TODO
-    phiL = 21.0 * dl(k);
+    %phiX = 0.6 * dx(k); %TODO
+    %phiL = 21.0 * dl(k);
+    phiX =  min(max(dx(k)/phiX_bar, -1), 1);
+    phiL = min(max(dl(k)/phiL_bar, -1), 1);
     phiX_store(k) = phiX;
     phiL_store(k) = phiL;
     
@@ -98,21 +100,46 @@ end
 
 %% Plots
 
-
 desktop = com.mathworks.mde.desk.MLDesktop.getInstance;
 myGroup = desktop.addGroup('Plots');
 desktop.setGroupDocked('Plots', 0);
-myDim   = java.awt.Dimension(3, 2);   % 3 columns, 2 rows
+myDim   = java.awt.Dimension(3, 3);   % 3 columns, 2 rows
 desktop.setDocumentArrangement('Plots', 2, myDim)
-figH    = gobjects(1, 5);
+figH    = gobjects(1, 9);
 bakWarn = warning('off','MATLAB:HandleGraphics:ObsoletedProperty:JavaFrame');
 % Error Plots
 
 clc
-figH(1) = figure('WindowStyle', 'docked', 'Name', sprintf('X Error Plot'), 'NumberTitle', 'off');
+figH(1) = figure('WindowStyle', 'docked', 'Name', sprintf('X desired and X actual Plot'), 'NumberTitle', 'off');
 drawnow;
 pause(0.02);
 set(get(handle(figH(1)), 'javaframe'), 'GroupName', 'Plots');
+grid on
+hold on
+plot(t,xd)
+hold on
+plot(t,x(1:end-1))
+ylabel('X desired and actual');
+xlabel('Time [sec]');
+hold on
+
+figH(2) = figure('WindowStyle', 'docked', 'Name', sprintf('l desired and X actual Plot'), 'NumberTitle', 'off');
+drawnow;
+pause(0.02);
+set(get(handle(figH(2)), 'javaframe'), 'GroupName', 'Plots');
+grid on
+hold on
+plot(t,ld)
+hold on
+plot(t,l(1:end-1))
+ylabel('l desired and actual');
+xlabel('Time [sec]');
+hold on
+
+figH(3) = figure('WindowStyle', 'docked', 'Name', sprintf('X Error Plot'), 'NumberTitle', 'off');
+drawnow;
+pause(0.02);
+set(get(handle(figH(3)), 'javaframe'), 'GroupName', 'Plots');
 grid minor;
 y = ex';
 x = t;
@@ -127,10 +154,10 @@ xlabel('Time [sec]');
 ylim([-0.1 0.1])
 hold on
 
-figH(2) = figure('WindowStyle', 'docked', 'Name', sprintf('L Error Plot'), 'NumberTitle', 'off');
+figH(4) = figure('WindowStyle', 'docked', 'Name', sprintf('L Error Plot'), 'NumberTitle', 'off');
 drawnow;
 pause(0.02);
-set(get(handle(figH(2)), 'javaframe'), 'GroupName', 'Plots');
+set(get(handle(figH(4)), 'javaframe'), 'GroupName', 'Plots');
 grid minor;
 y = el';
 x = t;
@@ -145,10 +172,10 @@ xlabel('Time [sec]');
 ylim([-0.04 0.04])
 hold on
 
-figH(3) = figure('WindowStyle', 'docked', 'Name', sprintf('Theta Error Plot'), 'NumberTitle', 'off');
+figH(5) = figure('WindowStyle', 'docked', 'Name', sprintf('Theta Error Plot'), 'NumberTitle', 'off');
 drawnow;
 pause(0.02);
-set(get(handle(figH(3)), 'javaframe'), 'GroupName', 'Plots');
+set(get(handle(figH(5)), 'javaframe'), 'GroupName', 'Plots');
 grid minor;
 y = eth';
 x = t;
@@ -159,10 +186,10 @@ xlabel('Time [sec]');
 ylim([-5 5])
 hold on
 
-figH(4) = figure('WindowStyle', 'docked', 'Name', sprintf('Ux Plot'), 'NumberTitle', 'off');
+figH(6) = figure('WindowStyle', 'docked', 'Name', sprintf('Ux Plot'), 'NumberTitle', 'off');
 drawnow;
 pause(0.02);
-set(get(handle(figH(4)), 'javaframe'), 'GroupName', 'Plots');
+set(get(handle(figH(6)), 'javaframe'), 'GroupName', 'Plots');
 grid minor;
 y = ux';
 x = t;
@@ -173,10 +200,10 @@ xlabel('Time [sec]');
 ylim([-5 20])
 hold on
 
-figH(5) = figure('WindowStyle', 'docked', 'Name', sprintf('Ul Plot'), 'NumberTitle', 'off');
+figH(7) = figure('WindowStyle', 'docked', 'Name', sprintf('Ul Plot'), 'NumberTitle', 'off');
 drawnow;
 pause(0.02);
-set(get(handle(figH(5)), 'javaframe'), 'GroupName', 'Plots');
+set(get(handle(figH(7)), 'javaframe'), 'GroupName', 'Plots');
 grid minor;
 y = ul';
 x = t;

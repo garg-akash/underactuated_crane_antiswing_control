@@ -1,3 +1,5 @@
+clc;
+clear all;
 T = 20;
 Ts = 0.001;
 t = 0:Ts:T;
@@ -25,8 +27,8 @@ epsilonX = 3.5; epsilonL = 3.5;
 psiX = 0.02; psiL = 0.015;
 kpx = 240; kdx = 100; kpl = 45; kdl = 10;
 lambdaX = 0.1; lambdaL = 0.1; 
-%phiX_bar = 8; phiL_bar = 5;
-phiX_bar = 0.01; phiL_bar = 0.1; %TODO
+phiX_bar = 2; phiL_bar = 5;
+%phiX_bar = 0.01; phiL_bar = 0.1; %TODO
 
 Frx_0 = 4.4; 
 krx = -0.5; 
@@ -36,19 +38,13 @@ l(1) = 0.5;
 pdl = l(1) + pdl_dash;
 dTH = 4.5; %TODO
 
-xd_prev = 0;
-ld_prev = l(1);
-dxd_prev = 0;
-dld_prev = 0;
-
 for k=1:numSteps
     xd(k) = pdx/2 + kvx^2*log(cosh(2*kax*t(k)/kvx-epsilonX)/cosh(2*kax*t(k)/kvx-epsilonX-2*kax*pdx/kvx^2))/(4*kax);
     ld(k) = (pdl_dash+2*l(1))/2 + kvl^2*log(cosh(2*kal*t(k)/kvl-epsilonL)/cosh(2*kal*t(k)/kvl-epsilonL-2*kal*pdl_dash/kvl^2))/(4*kal);
-    dxd(k) = (xd(k)-xd_prev)/Ts;
-    dld(k) = (ld(k)-ld_prev)/Ts;
-    ddxd(k) = (dxd(k)-dxd_prev)/Ts;
-    ddld(k) = (dld(k)-dld_prev)/Ts;
-    
+    dxd(k) = (kvx*sinh((2*kax*pdx)/kvx^2))/(2*cosh((epsilonX*kvx - 2*kax*t(k))/kvx)*cosh((epsilonX*kvx^2 - 2*kax*t(k)*kvx + 2*kax*pdx)/kvx^2));
+    dld(k) = (kvl*sinh((2*kal*pdl_dash)/kvl^2))/(2*cosh((epsilonL*kvl - 2*kal*t(k))/kvl)*cosh((epsilonL*kvl^2 - 2*kal*t(k)*kvl + 2*kal*pdl_dash)/kvl^2));
+    ddxd(k) = -(kax*(2*cosh((epsilonX*kvx - 2*kax*t(k))/kvx)^2 - 2*cosh((epsilonX*kvx^2 - 2*kax*t(k)*kvx + 2*kax*pdx)/kvx^2)^2))/(2*cosh((epsilonX*kvx - 2*kax*t(k))/kvx)^2*cosh((epsilonX*kvx^2 - 2*kax*t(k)*kvx + 2*kax*pdx)/kvx^2)^2);
+    ddld(k) = -(kal*(2*cosh((epsilonL*kvl - 2*kal*t(k))/kvl)^2 - 2*cosh((epsilonL*kvl^2 - 2*kal*t(k)*kvl + 2*kal*pdl_dash)/kvl^2)^2))/(2*cosh((epsilonL*kvl - 2*kal*t(k))/kvl)^2*cosh((epsilonL*kvl^2 - 2*kal*t(k)*kvl + 2*kal*pdl_dash)/kvl^2)^2);
     ex(k) = x(k)-xd(k);
     el(k) = l(k)-ld(k);
     eth(k) = th(k);
@@ -72,8 +68,8 @@ for k=1:numSteps
     dq(:,k) = [dx(k);dl(k);dth(k)];
     Frx = (Frx_0 * tanh(dx(k)/epsilon)) - (krx * abs(dx(k)) * dx(k));
     [Mc,C,G] = computeMCG(q(:,k),dq(:,k));
-    ux(k) = -kpx*ex(k) - 2*lambdaX*psiX^2*ex(k)/(psiX^2-ex(k)^2)^2 - kdx*dex(k) + (M+m)*ddxd(k) + m*ddld(k)*sin(th(k)) + m*dld(k)*dth(k)*cos(th(k)) + Frx - phiX_bar*sign(dex(k));
-    ul(k) = -kpl*el(k) - 2*lambdaL*psiL^2*el(k)/(psiL^2-el(k)^2)^2 - kdl*del(k) + m*ddxd(k)*sin(th(k)) + m*ddld(k) - m*g + dL*dl(k) - phiL_bar*sign(del(k));
+    ux(k) = -kpx*ex(k) - 2*lambdaX*psiX^2*ex(k)/(psiX^2-ex(k)^2)^2 - kdx*dex(k) + (M+m)*ddxd(k) + m*ddld(k)*sin(th(k)) + m*dld(k)*dth(k)*cos(th(k)) + Frx - phiX_bar*tanh(10*dex(k));%*sign(dex(k));
+    ul(k) = -kpl*el(k) - 2*lambdaL*psiL^2*el(k)/(psiL^2-el(k)^2)^2 - kdl*del(k) + m*ddxd(k)*sin(th(k)) + m*ddld(k) - m*g + dL*dl(k) - phiL_bar*tanh(10*del(k));%*sign(del(k));
     U(:,k) = [ux(k);ul(k);0];
     Fd = [-Frx+phiX; -dL*dl(k)+phiL; -dTH*dth(k)];
     ddq(:,k) = inv(Mc)*(U(:,k) + Fd - G - C*dq(:,k));
@@ -89,13 +85,7 @@ for k=1:numSteps
     dth(k+1) = dq(3,k+1);
     ddx(k) = ddq(1,k);
     ddl(k) = ddq(2,k);
-    ddth(k) = ddq(3,k);
-    
-    xd_prev = xd(k);
-    ld_prev = ld(k);
-    dxd_prev = dxd(k);
-    dld_prev = dld(k);
-    
+    ddth(k) = ddq(3,k);    
 end
 
 %% Plots
@@ -141,10 +131,7 @@ drawnow;
 pause(0.02);
 set(get(handle(figH(3)), 'javaframe'), 'GroupName', 'Plots');
 grid minor;
-y = ex';
-x = t;
-grid minor;
-line(x, y, 'Color', 'blue', 'LineWidth', 1);
+line(t, ex', 'Color', 'blue', 'LineWidth', 1);
 hold on
 plot(t,psiX*ones(size(t)),'--','Color','g')
 hold on
@@ -159,10 +146,7 @@ drawnow;
 pause(0.02);
 set(get(handle(figH(4)), 'javaframe'), 'GroupName', 'Plots');
 grid minor;
-y = el';
-x = t;
-grid minor;
-line(x, y, 'Color', 'red', 'LineWidth', 1);
+line(t, el', 'Color', 'red', 'LineWidth', 1);
 hold on
 plot(t,psiL*ones(size(t)),'--','Color','g')
 hold on
@@ -177,10 +161,7 @@ drawnow;
 pause(0.02);
 set(get(handle(figH(5)), 'javaframe'), 'GroupName', 'Plots');
 grid minor;
-y = eth';
-x = t;
-grid minor;
-line(x, y, 'Color', 'green', 'LineWidth', 1);
+line(t, eth', 'Color', 'green', 'LineWidth', 1);
 ylabel('Error in theta [meters]');
 xlabel('Time [sec]');
 ylim([-5 5])
@@ -191,10 +172,7 @@ drawnow;
 pause(0.02);
 set(get(handle(figH(6)), 'javaframe'), 'GroupName', 'Plots');
 grid minor;
-y = ux';
-x = t;
-grid minor;
-line(x, y, 'Color', 'blue', 'LineWidth', 1);
+line(t, ux', 'Color', 'blue', 'LineWidth', 1);
 ylabel('Ux(t) [N]');
 xlabel('Time [sec]');
 ylim([-5 20])
@@ -205,10 +183,7 @@ drawnow;
 pause(0.02);
 set(get(handle(figH(7)), 'javaframe'), 'GroupName', 'Plots');
 grid minor;
-y = ul';
-x = t;
-grid minor;
-line(x, y, 'Color', 'blue', 'LineWidth', 1);
+line(t, ul', 'Color', 'blue', 'LineWidth', 1);
 ylabel('Ul(t) [N]');
 xlabel('Time [sec]');
 ylim([-12 -4])

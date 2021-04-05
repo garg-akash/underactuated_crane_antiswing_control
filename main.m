@@ -10,6 +10,11 @@ ld = zeros(numSteps,1); dld = zeros(numSteps,1); ddld = zeros(numSteps,1);
 x = zeros(numSteps,1); dx = zeros(numSteps,1); ddx = zeros(numSteps,1);
 l = zeros(numSteps,1); dl = zeros(numSteps,1); ddl = zeros(numSteps,1);
 th = zeros(numSteps,1); dth = zeros(numSteps,1); ddth = zeros(numSteps,1);
+noise_amp_ = 5; %(in degrees)
+noise_start = 6; noise_end = 8;
+freq = 1/(noise_end-noise_start);
+noise_amp = [zeros(size(0:Ts:noise_start,2),1);deg2rad(noise_amp_).*ones(size(noise_start:Ts:noise_end,2)-1,1);zeros(size(noise_end:Ts:T,2)-1,1)];
+nn = noise_amp.*sin(2*pi*freq*t');
 
 ex = zeros(numSteps,1); dex = zeros(numSteps,1); ddex = zeros(numSteps,1);
 el = zeros(numSteps,1); del = zeros(numSteps,1); ddel = zeros(numSteps,1);
@@ -30,10 +35,10 @@ lambdaX = 0.1; lambdaL = 0.1;
 phiX_bar = 2; phiL_bar = 5;
 %phiX_bar = 0.01; phiL_bar = 0.1; %TODO
 
-Frx_0 = 4.4; 
+Frx_0 = 3.5*4.4; 
 krx = -0.5; 
 epsilon = 0.01;
-dL = 6.5;
+dL = 4*6.5;
 l(1) = 0.5;
 pdl = l(1) + pdl_dash;
 dTH = 4.5; %TODO
@@ -59,8 +64,10 @@ for k=1:numSteps
 
     %phiX = 0.6 * dx(k); %TODO
     %phiL = 21.0 * dl(k);
-    phiX =  min(max(dx(k)/phiX_bar, -1), 1);
-    phiL = min(max(dl(k)/phiL_bar, -1), 1);
+    %phiX =  min(max(dx(k)/phiX_bar, -1), 1);
+    phiX =  min(max(dx(k), -phiX_bar), phiX_bar);
+    %phiL = min(max(dl(k)/phiL_bar, -1), 1);
+    phiL =  min(max(dl(k), -phiL_bar), phiL_bar);
     phiX_store(k) = phiX;
     phiL_store(k) = phiL;
     
@@ -75,6 +82,12 @@ for k=1:numSteps
     ddq(:,k) = inv(Mc)*(U(:,k) + Fd - G - C*dq(:,k));
     dq(:,k+1) = dq(:,k) + ddq(:,k)*Ts; 
     q(:,k+1) = q(:,k) + dq(:,k)*Ts + 0.5*ddq(:,k)*Ts.^2; 
+%     q(3,k+1) = q(3,k+1) + noise_amp(k)*(-sin(2*pi*freq*t(k)));%noise_amp(k).*rand(1);
+    if (t(k)>=6 && t(k)<=8)
+        q(3,k+1) = noise_amp(k)*(-sin(2*pi*freq*t(k)));%noise_amp(k).*rand(1);
+    else
+        q(3,k+1) = q(3,k+1);
+    end
     q(3,k+1) = wrapToPi(q(3,k+1));
     
     x(k+1) = q(1,k+1);
@@ -87,7 +100,7 @@ for k=1:numSteps
     ddl(k) = ddq(2,k);
     ddth(k) = ddq(3,k);    
 end
-
+eth = rad2deg(eth);
 %% Plots
 
 desktop = com.mathworks.mde.desk.MLDesktop.getInstance;
@@ -161,8 +174,8 @@ drawnow;
 pause(0.02);
 set(get(handle(figH(5)), 'javaframe'), 'GroupName', 'Plots');
 grid minor;
-line(t, eth', 'Color', 'green', 'LineWidth', 1);
-ylabel('Error in theta [meters]');
+plot(t, eth', '-.r');
+ylabel('Error in theta [deg]');
 xlabel('Time [sec]');
 ylim([-5 5])
 hold on

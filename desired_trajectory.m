@@ -1,37 +1,21 @@
-clc
-clear all
+clc;
+clear all;
 
-T = 20;
+T = 20.0;
 Ts = 0.001;
 t = 0:Ts:T;
-
 numSteps = size(t,2);
 
-xd = zeros(numSteps,1); 
-ld = zeros(numSteps,1); 
 
-pdx = 0.6;
+% Get Travelling and Hoisting Trajectories
+rx_wpts = [0 1.5 1.5];
+[rx, drx, ddrx] = trapveltraj(rx_wpts, T/Ts + 1, 'EndTime', [12.5 20.0], 'Acceleration', [0.04 0.05]);
 
-kvx = 0.4; kvl = 0.4;
-kax = 0.4; kal = 0.4;
+rl_wpts = [1.5 0.6 0.6 1.5 1.5];
+[rl, drl, ddrl] = trapveltraj(rl_wpts, T/Ts + 1, 'EndTime', [5.s5 3.5 4.5 20.0], 'Acceleration', [0.12 0.18 0.18 0.05]);
 
-epsilonX = 3.5; epsilonL = 3.5;
+td = (mean(rl(1:4000)) + min(rl(1:4000))) / 2;
+ta = (mean(rl(5500:8000)) + min(rl(5500:8000))) / 2;
 
-pdl_dash = 0.25;
-
-l(1) = 0.5;
-
-for k=1:numSteps
-    term1 = pdx / 2;
-    term2 = (kvx^2) / (4*kax);
-    term3 = (2*kax*t(k)) / kvx;
-    term4 = (2*kax*pdx) / (kvx^2);
-    xd(k) = term1 + (term2 * log(cosh(term3 - epsilonX) / cosh(term3 - epsilonX - term4)));    
-
-    term1 = (pdl_dash + (2*l(1)) ) / 2;
-    term2 = (kvl^2) / (4*kal);
-    term3 = (2*kal*t(k)) / kvl;
-    term4 = (2*kal*pdl_dash) / (kvl^2);
-    ld(k) = term1 + (term2 * log(cosh(term3 - epsilonL) / cosh(term3 - epsilonL - term4)));    
-    
-end
+aa = max(drx)/ta;
+ad = max(drx)/td;

@@ -22,7 +22,7 @@ q = zeros(3,numSteps); dq = zeros(3,numSteps); ddq = zeros(3,numSteps);
 ux = zeros(numSteps,1); ul = zeros(numSteps,1);
 
 sx = zeros(numSteps,1); sl = zeros(numSteps,1);
-ddz = zeros(2,numSteps); f = zeros(2,numSteps); ddU = zeros(3,numSteps);
+ddz = zeros(3,numSteps); f = zeros(3,numSteps); ddU = zeros(3,numSteps);
 
 
 % Control Parameters
@@ -36,6 +36,7 @@ g=9.8;
 m = 15.6;
 mx = 36.2;
 ml = 1.7;
+M_tot = mx + ml;
 dvx = 2.5;
 dvl = 0.2;
 
@@ -46,6 +47,9 @@ rx_wpts = [0 1.5 1.5];
 
 rl_wpts = [1.5 0.6 0.6 1.5 1.5];
 [rl, drl, ddrl] = trapveltraj(rl_wpts, T/Ts + 1, 'EndTime', [5.5 3.5 4.5 20.0], 'Acceleration', [0.12 0.18 0.18 0.05]);
+
+
+l(1) = 1.5;
 
 for k=1:numSteps
     ex(k) = rx(k) - x(k);
@@ -60,33 +64,41 @@ for k=1:numSteps
     dq(:,k) = [dx(k); dl(k); dth(k)];
     ddq(:,k) = [ddx(k); ddl(k); ddth(k)];
     
-    M = [mx + m*sin(q(3))^2          m*sin(q(3));
-         m*sin(q(3))                 ml + m];
+%     M = [mx + m*sin(q(3))^2          m*sin(q(3));
+%          m*sin(q(3))                 ml + m];
+%     
+%     D = [dvx,     0;
+%          0 ,      dvl];
+%      
+%     cg = [-sin(q(3)) * ( (m*q(2)*dq(3)^2) - (m*g*cos(q(3))) ); 
+%           -m*q(2)*dq(3)^2 - m*g*cos(q(3))]; 
+      
+    M = [M_tot+m                 m*sin(q(3,k))  m*q(2,k)*cos(q(3,k));
+         m*sin(q(3,k))          m            0;
+         m*q(2,k)*cos(q(3,k))   0         m*q(2,k)^2];
     
-    D = [dvx,     0;
-         0 ,      dvl];
+    D = [0      2*m*cos(q(3,k))*dq(3,k)     -m*q(2,k)*sin(q(3,k))*dq(3,k);
+         0      0                       -m*q(2,k)*dq(3,k);
+         0      2*m*q(2,k)*dq(3,k)           0];
      
-    cg = [-sin(q(3)) * ( (m*q(2)*dq(3)^2) - (m*g*cos(q(3))) ); 
-          -m*q(2)*dq(3)^2 - m*g*cos(q(3))]; 
+    cg = [0 -m*g*cos(q(3,k)) m*g*q(2,k)*sin(q(3,k))]';
     
     ux(k) = ddrx(k) + kx*dex(k) - kas*deth(k);
     ul(k) = ddrl(k) + kl*del(k) + kli*el(k);
     
-    ddz(:, k) = [ux(k); ul(k)];
+    ddz(:, k) = [ux(k); ul(k); 0];
     
     fun = @(x) el(k);
     sx(k) = dex(k) + kx*ex(k) - kas*eth(k);
     sl(k) = del(k) + kl*el(k) + kli*integral(fun, 0, t(k), 'ArrayValued', true);
     
-    eta_sgn = [eta_x*sign(sx(k)) eta_l*sign(sl(k))]';
+    eta_sgn = [eta_x*sign(sx(k)) eta_l*sign(sl(k)) 0]';
     
-    f(:,k) = M*(ddz(:, k) + eta_sgn) + D*dq(1:2,k) + cg;
+    f(:,k) = M*(ddz(:, k) + eta_sgn) + D*dq(:,k) + cg;
     
-    ddq(1:2,k) = inv(M)*(f(:,k) - D*dq(1:2,k) - cg);
-    dq(1:2,k+1) = dq(1:2,k) + ddq(1:2,k)*Ts; 
-    q(1:2,k+1) = q(1:2,k) + dq(1:2,k)*Ts + 0.5*ddq(1:2,k)*Ts.^2; 
-    
-    % TODO: Theta not in the dynamic model
+    ddq(:,k) = inv(M)*(f(:,k) - D*dq(:,k) - cg);
+    dq(:,k+1) = dq(:,k) + ddq(:,k)*Ts; 
+    q(:,k+1) = q(:,k) + dq(:,k)*Ts + 0.5*ddq(:,k)*Ts.^2; 
     q(3,k+1) = wrapToPi(q(3,k+1));
     
     x(k+1) = q(1,k+1);
@@ -97,15 +109,73 @@ for k=1:numSteps
     dth(k+1) = dq(3,k+1);
     ddx(k) = ddq(1,k);
     ddl(k) = ddq(2,k);
-    ddth(k) = ddq(3,k); 
+    ddth(k) = ddq(3,k);
     
 end
 
 %% Plots
 
+desktop = com.mathworks.mde.desk.MLDesktop.getInstance;
+myGroup = desktop.addGroup('Plots');
+desktop.setGroupDocked('Plots', 0);
+myDim   = java.awt.Dimension(2, 2);   % 3 columns, 2 rows
+desktop.setDocumentArrangement('Plots', 2, myDim)
+figH    = gobjects(1, 4);
+bakWarn = warning('off','MATLAB:HandleGraphics:ObsoletedProperty:JavaFrame');
+% Error Plots
+
+clc
+figH(1) = figure('WindowStyle', 'docked', 'Name', sprintf('X desired and X actual Plot'), 'NumberTitle', 'off');
+drawnow;
+pause(0.02);
+set(get(handle(figH(1)), 'javaframe'), 'GroupName', 'Plots');
+grid on
+hold on
+plot(t,rx)
+hold on
+plot(t,x(1:end-1))
+ylabel('X desired and actual');
+xlabel('Time [sec]');
+hold on
+
+figH(2) = figure('WindowStyle', 'docked', 'Name', sprintf('l desired and l actual Plot'), 'NumberTitle', 'off');
+drawnow;
+pause(0.02);
+set(get(handle(figH(2)), 'javaframe'), 'GroupName', 'Plots');
 grid on
 hold on
 plot(t,rl)
-ylabel('X desired');
+hold on
+plot(t,l(1:end-1))
+ylabel('l desired and actual');
 xlabel('Time [sec]');
 hold on
+
+figH(3) = figure('WindowStyle', 'docked', 'Name', sprintf('th desired and th actual Plot'), 'NumberTitle', 'off');
+drawnow;
+pause(0.02);
+set(get(handle(figH(3)), 'javaframe'), 'GroupName', 'Plots');
+grid on
+hold on
+plot(t,rth)
+hold on
+plot(t,th(1:end-1))
+ylabel('l desired and actual');
+xlabel('Time [sec]');
+hold on
+    
+figH(4) = figure('WindowStyle', 'docked', 'Name', sprintf('Solid and Hoisting forces'), 'NumberTitle', 'off');
+drawnow;
+pause(0.02);
+set(get(handle(figH(4)), 'javaframe'), 'GroupName', 'Plots');
+grid on
+hold on
+plot(t,f(1,:)*10)
+hold on
+plot(t,f(2,:))
+ylabel('l desired and actual');
+xlabel('Time [sec]');
+hold on
+
+
+

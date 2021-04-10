@@ -41,16 +41,17 @@ epsilon = 0.01;
 % dL = 4*6.5; dX= 0;
 l(1) = 0.5;
 pdl = l(1) + pdl_dash;
-dTH = 4.5; %TODO
+dTH = 0.0; %TODO
 
 % TODO: These params are from previous paper. Currently set to zero. Has to
 % be tuned
-kpx = 3.5;          kpl = 2;
-kas = 0.6;          kli = 4;
+kpx = 4.5;          kpl = 2;
+kas = 4.6;          kli = 4;
 eta_x = 2;          eta_l = 2;
-dX= 8*2.5;          dL = 0.2;          
+dX= 20.0;          dL = 0.2;          
 
-el_int = 0;
+el_int = 0.02;
+
 for k=1:numSteps
     xd(k) = pdx/2 + kvx^2*log(cosh(2*kax*t(k)/kvx-epsilonX)/cosh(2*kax*t(k)/kvx-epsilonX-2*kax*pdx/kvx^2))/(4*kax);
     ld(k) = (pdl_dash+2*l(1))/2 + kvl^2*log(cosh(2*kal*t(k)/kvl-epsilonL)/cosh(2*kal*t(k)/kvl-epsilonL-2*kal*pdl_dash/kvl^2))/(4*kal);
@@ -134,7 +135,21 @@ end
 eth = rad2deg(eth);
 
 %% Plot
-figure
+close all
+
+desktop = com.mathworks.mde.desk.MLDesktop.getInstance;
+myGroup = desktop.addGroup('Plots');
+desktop.setGroupDocked('Plots', 0);
+myDim   = java.awt.Dimension(4, 4);   % 4 columns, 4 rows
+desktop.setDocumentArrangement('Plots', 2, myDim)
+figH    = gobjects(1, 8);
+bakWarn = warning('off','MATLAB:HandleGraphics:ObsoletedProperty:JavaFrame');
+
+clc
+figH(1) = figure('WindowStyle', 'docked', 'Name', sprintf('X desired and actual'), 'NumberTitle', 'off');
+drawnow;
+pause(0.02);
+set(get(handle(figH(1)), 'javaframe'), 'GroupName', 'Plots');
 grid on
 hold on
 plot(t,xd)
@@ -142,8 +157,12 @@ hold on
 plot(t,x(1:end-1))
 ylabel('X desired and actual');
 xlabel('Time [sec]');
+hold on
 
-figure
+figH(2) = figure('WindowStyle', 'docked', 'Name', sprintf('l desired and actual'), 'NumberTitle', 'off');
+drawnow;
+pause(0.02);
+set(get(handle(figH(2)), 'javaframe'), 'GroupName', 'Plots');
 grid on
 hold on
 plot(t,ld)
@@ -151,8 +170,12 @@ hold on
 plot(t,l(1:end-1))
 ylabel('l desired and actual');
 xlabel('Time [sec]');
+hold on
 
-figure
+figH(3) = figure('WindowStyle', 'docked', 'Name', sprintf('Error in x [meters]'), 'NumberTitle', 'off');
+drawnow;
+pause(0.02);
+set(get(handle(figH(3)), 'javaframe'), 'GroupName', 'Plots');
 grid minor;
 line(t, ex', 'Color', 'blue', 'LineWidth', 1);
 hold on
@@ -162,8 +185,12 @@ plot(t,-psiX*ones(size(t)),'--','Color','g')
 ylabel('Error in x [meters]');
 xlabel('Time [sec]');
 ylim([-0.1 0.1])
+hold on
 
-figure
+figH(4) = figure('WindowStyle', 'docked', 'Name', sprintf('Error in l [meters]'), 'NumberTitle', 'off');
+drawnow;
+pause(0.02);
+set(get(handle(figH(4)), 'javaframe'), 'GroupName', 'Plots');
 grid minor;
 line(t, el', 'Color', 'red', 'LineWidth', 1);
 hold on
@@ -173,27 +200,41 @@ plot(t,-psiL*ones(size(t)),'--','Color','g')
 ylabel('Error in l [meters]');
 xlabel('Time [sec]');
 ylim([-0.04 0.04])
+hold on
 
-figure
+figH(5) = figure('WindowStyle', 'docked', 'Name', sprintf('Error in theta [deg]'), 'NumberTitle', 'off');
+drawnow;
+pause(0.02);
+set(get(handle(figH(5)), 'javaframe'), 'GroupName', 'Plots');
 grid minor;
 plot(t, eth', '-.r');
 ylabel('Error in theta [deg]');
 xlabel('Time [sec]');
 ylim([-5 5])
+hold on
 
-figure
-grid minor;
+figH(6) = figure('WindowStyle', 'docked', 'Name', sprintf('Ux [N]'), 'NumberTitle', 'off');
+drawnow;
+pause(0.02);
+set(get(handle(figH(6)), 'javaframe'), 'GroupName', 'Plots');
 line(t, U(1,:)', 'Color', 'blue', 'LineWidth', 1);
 ylabel('Ux(t) [N]');
 xlabel('Time [sec]');
 ylim([-5 20])
+hold on
 
-figure
+figH(7) = figure('WindowStyle', 'docked', 'Name', sprintf('Ul [N]'), 'NumberTitle', 'off');
+drawnow;
+pause(0.02);
+set(get(handle(figH(7)), 'javaframe'), 'GroupName', 'Plots');
 grid minor;
 line(t, U(2,:)', 'Color', 'blue', 'LineWidth', 1);
 ylabel('Ul(t) [N]');
 xlabel('Time [sec]');
 ylim([-12 -4])
+hold on
+
+
 
 %% Functions
 function [Mc,D,Cg] = computeMCG(q,dq,dX,dL)

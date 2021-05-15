@@ -134,9 +134,6 @@ for k=1:numSteps
     ddq_dist(:,k) = inv(Mc_dist)*(U_dist(:,k) + Fd_dist - G_dist - C_dist*dq_dist(:,k));
     dq_dist(:,k+1) = dq_dist(:,k) + ddq_dist(:,k)*Ts; 
     q_dist(:,k+1) = q_dist(:,k) + dq_dist(:,k)*Ts + 0.5*ddq_dist(:,k)*Ts.^2;
-%     q(3,k+1) = q(3,k+1) + noise_amp(k)*(-sin(2*pi*freq*t(k)));%noise_amp(k).*rand(1);
-    
-    
     
     if (t(k)>=6 && t(k)<=8)
         q_dist(3,k+1) = noise_amp(k)*(-sin(2*pi*freq*t(k)));%noise_amp(k).*rand(1);
